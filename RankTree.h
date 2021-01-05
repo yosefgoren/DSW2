@@ -6,10 +6,10 @@
 
 class RankTree : public SearchTree<Lecture>
 {
-private:
-
 public:
-
+    bool insert(int key, const Lecture& lect) override;
+    bool remove(int key) override;
+    Node findByOrder(int i);
 };
 
 #endif
