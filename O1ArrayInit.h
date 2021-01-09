@@ -2,7 +2,6 @@
 #define O1ARRAYINIT_H
 #include <iostream>
 #include "assert.h"
-#include <functional>
 
 
 template<class Data>
@@ -16,14 +15,14 @@ class O1Array{
     Data constant;
     int max_size;
     int top;//also used as current size
-    static const int INITIAL_SIZE = 100;
+    static const int INITIAL_SIZE = 10;
     static const int EXPAND_FACTOR = 2;
 
     void expand();
 public:
     O1Array(Data constant,int max_size = INITIAL_SIZE, int top = 0);
-    O1Array(const O1Array&  other) = delete;
-    O1Array& operator=(const O1Array&  other) = delete;
+    O1Array(const O1Array& other);
+    O1Array& operator=(const O1Array& other);
     ~O1Array();
     bool deleteElem(unsigned int i);
     //SET array[i] value with operator[]
@@ -35,6 +34,54 @@ public:
     int getCurrectSize() const;
     void printArray() const;
 };
+
+template<class Data>
+O1Array<Data>::O1Array(const O1Array<Data>& other) : max_size(other.max_size), top(other.top),
+constant(other.constant){
+    int other_size = other.getMaxSize();
+    values = new Data[other_size];
+    C = new int[other_size];
+    B = new int[other_size];
+
+    for(int i = 0 ; i < other_size; ++i){
+        if(other(i) != other.constant){
+            values[i] = other.values[i];
+            B[i] = other.B[i];
+        }
+        C[i] = other.C[i];
+    }
+}
+
+template<class Data>
+O1Array<Data>& O1Array<Data>::operator=(const O1Array<Data>& other){
+    if(this == &other){
+        return *this;
+    }
+    int other_size = other.getMaxSize();
+    Data* tmp_values = new Data[other_size];
+    int* tmp_C = new int[other_size];
+    int* tmp_B = new int[other_size];
+
+    for(int i = 0 ; i < other_size; ++i){
+        if(other(i) != other.constant){
+            tmp_values[i] = other.values[i];
+            tmp_B[i] = other.B[i];
+        }
+        tmp_C[i] = other.C[i];
+    }
+
+    delete[] values;
+    delete[] B;
+    delete[] C;
+    values = tmp_values;
+    B = tmp_B;
+    C = tmp_C;
+    constant = other.constant;
+    max_size = other_size;
+    top = other.top;
+
+    return *this;
+}
 
 
 template<class Data>
