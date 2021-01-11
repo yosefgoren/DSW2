@@ -5,7 +5,7 @@
 #include <functional>
 #include <iostream>
 
-template <class Data>
+template <class Data, class Key>
 class SearchTree
 {
 public:
@@ -24,26 +24,26 @@ public:
      * @brief copy ctor does not duplicate all of the data, 
      * it only makes another instance of the hub 'pointing' to the same data.
      */
-    SearchTree(const SearchTree<Data>& source) = default;
+    SearchTree(const SearchTree<Data, Key>& source) = default;
     ~SearchTree();
 
-    bool insert(int key, const Data& data);
-    bool remove(int key);
+    bool insert(Key key, const Data& data);
+    bool remove(Key key);
 
-    Data& operator[](int key);
-    const Data& operator[](int key) const;
+    Data& operator[](Key key);
+    const Data& operator[](Key key) const;
 
     class iterator;
     iterator begin();
     iterator end();
-    SearchTree<Data>& bigToSmall(){ittirate_in_revese = true; return *this;}
-    SearchTree<Data>& smallToBig(){ittirate_in_revese = false; return *this;}
+    SearchTree<Data, Key>& bigToSmall(){ittirate_in_revese = true; return *this;}
+    SearchTree<Data, Key>& smallToBig(){ittirate_in_revese = false; return *this;}
 
     static int height(Node node){return node == nullptr ? 0 : node->height;}
     int height(){return height(head);}
 
     Node findByOrder(int place);
-    Node findNode(int key){return findSub(head, key);}
+    Node findNode(Key key){return findSub(head, key);}
     Node closestBiggerSon(Node current);
     Node closestSmallesrSon(Node current);
 
@@ -71,18 +71,18 @@ protected:
     void rollRR(Node A, Node B);
 
 private:
-    Node findSub(Node top, int key) const;
+    Node findSub(Node top, Key key) const;
     static void removeSub(Node top);
     static void execSub(Node top, std::function<void(Data&)> fun, Order ord, bool revurse);
 };
 
-template <class Data>
-struct SearchTree<Data>::node_t
+template <class Data, class Key>
+struct SearchTree<Data, Key>::node_t
 {
-    int key;
+    Key key;
     Data data;
-    SearchTree<Data>& tree;
-    friend SearchTree<Data>;
+    SearchTree<Data, Key>& tree;
+    friend SearchTree<Data, Key>;
     void removeFromTree(){tree.remove(key);}
     bool lastInTree(){return father==nullptr && left==nullptr && right==nullptr;}
 private:
@@ -92,17 +92,17 @@ private:
     int height;
     int sub_tree_size;
     void updateData();
-    node_t(int key, const Data& data, SearchTree<Data>& tree)
+    node_t(Key key, const Data& data, SearchTree<Data, Key>& tree)
         :key(key), data(data), tree(tree), father(nullptr), left(nullptr), right(nullptr), height(1), sub_tree_size(1){}
 };
 
-template <class Data>
-SearchTree<Data>::Node SearchTree<Data>::findByOrder(int place)
+template <class Data, class Key>
+typename SearchTree<Data, Key>::Node SearchTree<Data, Key>::findByOrder(int place)
 {
     if(head->sub_tree_size < place)
         return nullptr;
     int skipped_counter = 0;
-    int current = head;
+    Node current = head;
     while(!height(current) != 1)
     {
         int right_sub_size = current->right == nullptr ? 0 : current->right->sub_tree_size;
@@ -115,14 +115,14 @@ SearchTree<Data>::Node SearchTree<Data>::findByOrder(int place)
         else//otherwise, skip it, and look in the left son
         {
             skipped_counter += right_sub_size + 1;
-            current = current->right; 
+            current = current->left; 
         }
     }
     return current;
 }
 
-template <class Data>
-void SearchTree<Data>::node_t::updateData()
+template <class Data, class Key>
+void SearchTree<Data, Key>::node_t::updateData()
 {
     updateHeight(this);
     sub_tree_size = 1;
@@ -132,8 +132,8 @@ void SearchTree<Data>::node_t::updateData()
         sub_tree_size += right->sub_tree_size;
 }
 
-template <class Data>
-void SearchTree<Data>::removeSub(Node top)
+template <class Data, class Key>
+void SearchTree<Data, Key>::removeSub(Node top)
 {
     if(top==nullptr)
         return;
@@ -148,14 +148,14 @@ void SearchTree<Data>::removeSub(Node top)
         father->updateData();
 }
 
-template <class Data>
-SearchTree<Data>::~SearchTree()
+template <class Data, class Key>
+SearchTree<Data, Key>::~SearchTree()
 {
     removeSub(head);
 }
 
-template <class Data>
-void SearchTree<Data>::assertStructure(Node initial)
+template <class Data, class Key>
+void SearchTree<Data, Key>::assertStructure(Node initial)
 {
     if(initial==nullptr)
     {
@@ -177,8 +177,8 @@ void SearchTree<Data>::assertStructure(Node initial)
     } 
 }
 
-template <class Data>
-void SearchTree<Data>::execSub(Node top, std::function<void(Data&)> fun, Order ord, bool revurse)
+template <class Data, class Key>
+void SearchTree<Data, Key>::execSub(Node top, std::function<void(Data&)> fun, Order ord, bool revurse)
 {
     if(top == nullptr)
         return;
@@ -193,23 +193,23 @@ void SearchTree<Data>::execSub(Node top, std::function<void(Data&)> fun, Order o
         fun(top->data);
 }
 
-template <class Data>
-void SearchTree<Data>::exec(std::function<void(SearchTree<Data>::Node)> fun, bool revurse, Order ord)
+template <class Data, class Key>
+void SearchTree<Data, Key>::exec(std::function<void(SearchTree<Data, Key>::Node)> fun, bool revurse, Order ord)
 {
     execSub(head, fun, ord, revurse);
 }
 
-template <class Data>
-class SearchTree<Data>::iterator
+template <class Data, class Key>
+class SearchTree<Data, Key>::iterator
 {
 public:
-    iterator(SearchTree<Data>* tree, Node initial_node): tree(tree), current(initial_node), last(nullptr){}
+    iterator(SearchTree<Data, Key>* tree, Node initial_node): tree(tree), current(initial_node), last(nullptr){}
     Node operator*(){return current;}
     iterator& operator++();
     bool operator==(const iterator& it) const{return tree==it.tree && current==it.current && last==it.last;}
     bool operator!=(const iterator& it) const {return !(*this == it);}
 private:
-    SearchTree<Data>* tree;
+    SearchTree<Data, Key>* tree;
     Node current;
     Node last;
 
@@ -263,14 +263,14 @@ private:
     }
 };
 
-template <class Data>
-typename SearchTree<Data>::iterator& SearchTree<Data>::iterator::operator++()
+template <class Data, class Key>
+typename SearchTree<Data, Key>::iterator& SearchTree<Data, Key>::iterator::operator++()
 {
     return tree->ittirate_in_revese ? opAdvanceBigToSmall() : opAdvanceSmallToBig();
 }
 
-template <class Data>
-typename SearchTree<Data>::iterator& SearchTree<Data>::iterator::opAdvanceSmallToBig()
+template <class Data, class Key>
+typename SearchTree<Data, Key>::iterator& SearchTree<Data, Key>::iterator::opAdvanceSmallToBig()
 {
     //end state:
     if(current==nullptr && last==nullptr)
@@ -436,8 +436,8 @@ typename SearchTree<Data>::iterator& SearchTree<Data>::iterator::opAdvanceSmallT
     return *this;
 }
 
-template <class Data>
-typename SearchTree<Data>::iterator& SearchTree<Data>::iterator::opAdvanceBigToSmall()
+template <class Data, class Key>
+typename SearchTree<Data, Key>::iterator& SearchTree<Data, Key>::iterator::opAdvanceBigToSmall()
 {
     //end state:
     if(current==nullptr && last==nullptr)
@@ -602,20 +602,20 @@ typename SearchTree<Data>::iterator& SearchTree<Data>::iterator::opAdvanceBigToS
     return *this;
 }
 
-template <class Data>
-typename SearchTree<Data>::iterator SearchTree<Data>::begin()
+template <class Data, class Key>
+typename SearchTree<Data, Key>::iterator SearchTree<Data, Key>::begin()
 {
     return ittirate_in_revese ? iterator(this, biggest) : iterator(this, smallest);
 }
 
-template <class Data>
-typename SearchTree<Data>::iterator SearchTree<Data>::end()
+template <class Data, class Key>
+typename SearchTree<Data, Key>::iterator SearchTree<Data, Key>::end()
 {
     return iterator(this, nullptr);
 }
 
-template <class Data>
-bool SearchTree<Data>::insert(int key, const Data& data)
+template <class Data, class Key>
+bool SearchTree<Data, Key>::insert(Key key, const Data& data)
 {
     Node new_node = new node_t(key, data, *this);
 
@@ -674,8 +674,7 @@ bool SearchTree<Data>::insert(int key, const Data& data)
             else rollRR(next->right, next);
             return true;
         default:
-            //updateHeight(next);//old
-            next->updateData();//new
+            next->updateData();
             current = next;
             break;
         }
@@ -688,8 +687,8 @@ bool SearchTree<Data>::insert(int key, const Data& data)
     return true;
 }
 
-template <class Data>
-typename SearchTree<Data>::Node SearchTree<Data>::closestBiggerSon(Node current)
+template <class Data, class Key>
+typename SearchTree<Data, Key>::Node SearchTree<Data, Key>::closestBiggerSon(Node current)
 {
     if(current->right==nullptr)
         return nullptr;
@@ -700,8 +699,8 @@ typename SearchTree<Data>::Node SearchTree<Data>::closestBiggerSon(Node current)
     return current;
 }
 
-template <class Data>
-typename SearchTree<Data>::Node SearchTree<Data>::closestSmallesrSon(Node current)
+template <class Data, class Key>
+typename SearchTree<Data, Key>::Node SearchTree<Data, Key>::closestSmallesrSon(Node current)
 {
     if(current->left==nullptr)
         return nullptr;
@@ -712,8 +711,8 @@ typename SearchTree<Data>::Node SearchTree<Data>::closestSmallesrSon(Node curren
     return current;
 }
 
-template <class Data>
-bool SearchTree<Data>::remove(int key)
+template <class Data, class Key>
+bool SearchTree<Data, Key>::remove(Key key)
 {
     //find Node:
     Node to_remove = findSub(head, key);
@@ -822,9 +821,7 @@ bool SearchTree<Data>::remove(int key)
             }
             break;
         default:
-            //updateHeight(current);//old
-            current->updateData();//new
-            //'new_top' will stay 'current'.
+            current->updateData();
             break;
         }
         current = new_top->father;
@@ -833,8 +830,8 @@ bool SearchTree<Data>::remove(int key)
     return true;
 }
 
-template <class Data>
-typename SearchTree<Data>::Node SearchTree<Data>::findSub(Node top, int key) const
+template <class Data, class Key>
+typename SearchTree<Data, Key>::Node SearchTree<Data, Key>::findSub(Node top, Key key) const
 {
     if(top == nullptr || key == top->key)
         return top;
@@ -844,20 +841,20 @@ typename SearchTree<Data>::Node SearchTree<Data>::findSub(Node top, int key) con
         return findSub(top->left, key);
 }
 
-template <class Data>
-Data& SearchTree<Data>::operator[](int key)
+template <class Data, class Key>
+Data& SearchTree<Data, Key>::operator[](Key key)
 {
     return findSub(head, key)->data;
 }
 
-template <class Data>
-const Data& SearchTree<Data>::operator[](int key) const
+template <class Data, class Key>
+const Data& SearchTree<Data, Key>::operator[](Key key) const
 {
     return findSub(head, key)->data;
 }
 
-template <class Data>
-void SearchTree<Data>::rollLL(Node A, Node B)
+template <class Data, class Key>
+void SearchTree<Data, Key>::rollLL(Node A, Node B)
 {
     Node oldRightA = A->right;
     A->right = B;
@@ -877,12 +874,12 @@ void SearchTree<Data>::rollLL(Node A, Node B)
     if(oldRightA!=nullptr)
         oldRightA->father = B;
 
-    updateHeight(B);
-    updateHeight(A);
+    B->updateData();
+    A->updateData();
 }
 
-template <class Data>
-void SearchTree<Data>::rollLR(Node A, Node B, Node C)
+template <class Data, class Key>
+void SearchTree<Data, Key>::rollLR(Node A, Node B, Node C)
 {
     Node oldLeftA = A->left;
     Node oldRightA = A->right;
@@ -911,13 +908,13 @@ void SearchTree<Data>::rollLR(Node A, Node B, Node C)
     if(oldRightA!=nullptr)
         oldRightA->father = C;
 
-    updateHeight(C);
-    updateHeight(B);
-    updateHeight(A);
+    C->updateData();
+    B->updateData();
+    A->updateData();
 }
 
-template <class Data>
-void SearchTree<Data>::rollRL(Node A, Node B, Node C)
+template <class Data, class Key>
+void SearchTree<Data, Key>::rollRL(Node A, Node B, Node C)
 {
     Node oldLeftA = A->left;
     Node oldRightA = A->right;
@@ -946,13 +943,13 @@ void SearchTree<Data>::rollRL(Node A, Node B, Node C)
     if(oldLeftA!=nullptr)
         oldLeftA->father = C;
 
-    updateHeight(C);
-    updateHeight(B);
-    updateHeight(A);
+    C->updateData();
+    B->updateData();
+    A->updateData();
 }
 
-template <class Data>
-void SearchTree<Data>::rollRR(Node A, Node B)
+template <class Data, class Key>
+void SearchTree<Data, Key>::rollRR(Node A, Node B)
 {
     Node oldLeftA = A->left;
     A->left = B;
@@ -972,8 +969,8 @@ void SearchTree<Data>::rollRR(Node A, Node B)
     if(oldLeftA!=nullptr)
         oldLeftA->father = B;
 
-    updateHeight(B);
-    updateHeight(A);
+    B->updateData();
+    A->updateData();
 }
 
 #endif

@@ -19,6 +19,14 @@ public:
         //should not get here! -unhandled case.
         return false;
     }
+    bool operator>(const Lecture& other) const
+    {
+        return !(*this < other || *this == other); 
+    }
+    bool operator==(const Lecture& other) const
+    {
+        return courseID == other.courseID && classID == other.classID;
+    }
     Lecture(int courseID, int classID,int time):courseID(courseID), classID(classID), time(time){}
 };
 
