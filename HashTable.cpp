@@ -7,7 +7,7 @@
  * true - key was found in the DS
  * false - key was not found in the DS
 */
-DLinkedList<O1Array<Lecture*>>::Node HashTable::Find(int key) const{
+DLinkedList<O1Array<Tnode>>::Node HashTable::Find(int key) const{
     if(!table.is_initialized(key%table_size)){
         return nullptr;
     }
@@ -22,8 +22,8 @@ DLinkedList<O1Array<Lecture*>>::Node HashTable::Find(int key) const{
 bool HashTable::insertKey(int key){
     //add a new list if its the first key in this index
     if(!table.is_initialized(key%table_size)){
-        table[key%table_size] = new DLinkedList<O1Array<Lecture*>>();
-        table(key%table_size)->insertLast(key,O1Array<Lecture*>(nullptr));
+        table[key%table_size] = new DLinkedList<O1Array<Tnode>>();
+        table(key%table_size)->insertLast(key,O1Array<Tnode>(nullptr));
         num_of_keys++;
         expandOrShrink();
         return true;
@@ -33,7 +33,7 @@ bool HashTable::insertKey(int key){
         return false;
     }
 
-    table(key%table_size)->insertLast(key,O1Array<Lecture*>(nullptr));
+    table(key%table_size)->insertLast(key,O1Array<Tnode>(nullptr));
     num_of_keys++;
     expandOrShrink();
     return true;
@@ -46,7 +46,7 @@ void HashTable::deleteKey(int key){
         return;
     }
     //check if the key is in the list and act accordingly
-    DLinkedList<O1Array<Lecture*>>::Node tmp_node = table(key%table_size)->find_key(key);
+    DLinkedList<O1Array<Tnode>>::Node tmp_node = table(key%table_size)->find_key(key);
     if(tmp_node != nullptr){
         tmp_node->removeFromList();
         num_of_keys--;
@@ -61,13 +61,13 @@ void HashTable::deleteKey(int key){
 }
 
 // template<class Data>
-// DLinkedList<O1Array<Lecture*>>*& HashTable<Data>::operator[](unsigned int i){
+// DLinkedList<O1Array<Tnode>>*& HashTable<Data>::operator[](unsigned int i){
 //     return table(i);
 // }
 
-HashTable::HashTable() : table(O1Array<DLinkedList<O1Array<Lecture*>>*>(nullptr)), num_of_keys(0), table_size(INITIAL_SIZE){}
+HashTable::HashTable() : table(O1Array<DLinkedList<O1Array<Tnode>>*>(nullptr)), num_of_keys(0), table_size(INITIAL_SIZE){}
 
-// HashTable::HashTable(int size) : table(O1Array<DLinkedList<O1Array<Lecture*>>*>(nullptr,size)), num_of_keys(0), table_size(size){}
+// HashTable::HashTable(int size) : table(O1Array<DLinkedList<O1Array<Tnode>>*>(nullptr,size)), num_of_keys(0), table_size(size){}
 
 HashTable::~HashTable(){
     for(int i = 0; i < table_size; ++i){
@@ -96,7 +96,7 @@ void HashTable::expandOrShrink(){
     else{
         return;
     }
-    O1Array<DLinkedList<O1Array<Lecture*>>*> tmp_table(nullptr,new_size);
+    O1Array<DLinkedList<O1Array<Tnode>>*> tmp_table(nullptr,new_size);
     for(int i = 0; i < table_size; ++i){
         //copy only legit keys
         if(!table.is_initialized(i)){
@@ -108,7 +108,7 @@ void HashTable::expandOrShrink(){
                 tmp_table(elem->key%new_size)->insertLast(elem->key,elem->data);
             }
             else{
-                tmp_table[elem->key%new_size] = new DLinkedList<O1Array<Lecture*>>();
+                tmp_table[elem->key%new_size] = new DLinkedList<O1Array<Tnode>>();
                 tmp_table(elem->key%new_size)->insertLast(elem->key,elem->data);
             }
         }

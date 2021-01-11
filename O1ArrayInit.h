@@ -17,10 +17,10 @@ class O1Array{
     int top;//also used as current size
     static const int INITIAL_SIZE = 10;
     static const int EXPAND_FACTOR = 2;
-
+    bool is_dynamic;
     void expand();
 public:
-    O1Array(Data constant,int max_size = INITIAL_SIZE, int top = 0);
+    O1Array(Data constant, int max_size = INITIAL_SIZE, int top = 0, bool is_dynamic = true);
     O1Array(const O1Array& other);
     O1Array& operator=(const O1Array& other);
     ~O1Array();
@@ -31,13 +31,13 @@ public:
     const Data& operator()(unsigned int i) const;
     bool is_initialized(unsigned int i) const;
     int getMaxSize() const;
-    int getCurrectSize() const;
+    int getCurrentSize() const;
     void printArray() const;
 };
 
 template<class Data>
-O1Array<Data>::O1Array(const O1Array<Data>& other) : max_size(other.max_size), top(other.top),
-constant(other.constant){
+O1Array<Data>::O1Array(const O1Array<Data>& other) : constant(other.constant), max_size(other.max_size), top(other.top),
+ is_dynamic(other.is_dynamic){
     int other_size = other.getMaxSize();
     values = new Data[other_size];
     C = new int[other_size];
@@ -79,6 +79,7 @@ O1Array<Data>& O1Array<Data>::operator=(const O1Array<Data>& other){
     constant = other.constant;
     max_size = other_size;
     top = other.top;
+    is_dynamic = other.is_dynamic;
 
     return *this;
 }
@@ -110,7 +111,8 @@ void O1Array<Data>::expand(){
 }
 
 template<class Data>
-O1Array<Data>::O1Array(Data constant,int max_size, int top) : constant(constant), max_size(max_size), top(top){
+O1Array<Data>::O1Array(Data constant,int max_size, int top, bool is_dynamic) : constant(constant), max_size(max_size),
+top(top), is_dynamic(is_dynamic){
     values = new Data[INITIAL_SIZE];
     B = new int[INITIAL_SIZE];
     C = new int[INITIAL_SIZE];
@@ -130,7 +132,7 @@ Data& O1Array<Data>::operator[](unsigned int i) {
         C[top] = i;
         B[i] = top;
         top++;
-        if(top >= max_size){
+        if(top >= max_size && is_dynamic == true){
             expand();
         }
     }
@@ -162,7 +164,7 @@ int O1Array<Data>::getMaxSize() const{
 }
 
 template<class Data>
-int O1Array<Data>::getCurrectSize() const{
+int O1Array<Data>::getCurrentSize() const{
     return top;
 }
 
