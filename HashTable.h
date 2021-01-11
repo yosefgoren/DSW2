@@ -7,6 +7,9 @@
 #include "O1ArrayInit.h"
 #include "double_linked_list.h"
 #include "Lecture.h"
+#include "RankTree.h"
+
+typedef SearchTree<void*,Lecture>::Node Tnode;
 
 // using std::function;
 
@@ -15,7 +18,7 @@
 // }
 
 class HashTable{
-    O1Array<DLinkedList<O1Array<Lecture*>>*> table;
+    O1Array<DLinkedList<O1Array<Tnode>>*> table;
     // function<int(int,int)> func;
     int num_of_keys;
     int table_size;
@@ -26,16 +29,16 @@ class HashTable{
     static constexpr double EXPAND_RATIO = 0.75;//avoid O1Array from expanding itself
     static constexpr double SHRINK_RATIO = 0.25;
     void expandOrShrink();
+    bool checkExpand() const;
+    bool checkShrink() const;
 public:
     HashTable();
     // HashTable(int size);//probably we dont need this
     ~HashTable();
     // DLinkedList<O1Array<Lecture*>>*& operator[](unsigned int i);
-    bool checkExpand() const;
-    bool checkShrink() const;
     bool insertKey(int key);
     void deleteKey(int key);
-    DLinkedList<O1Array<Lecture*>>::Node Find(int key) const;
+    DLinkedList<O1Array<Tnode>>::Node Find(int key) const;
     void printTable() const;
 };
 
