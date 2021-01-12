@@ -313,6 +313,7 @@ void DLinkedList<Data>::print_list() const{
         tmp = tmp->next;
         // counter++;
     }
+    std::cout<<""<<std::endl;
 }
 
 template<class Data>

@@ -20,6 +20,7 @@ class O1Array{
     bool is_dynamic;
     void expand();
 public:
+    O1Array() = delete;
     O1Array(Data constant, int max_size = INITIAL_SIZE, int top = 0, bool is_dynamic = true);
     O1Array(const O1Array& other);
     O1Array& operator=(const O1Array& other);
@@ -32,24 +33,35 @@ public:
     bool is_initialized(unsigned int i) const;
     int getMaxSize() const;
     int getCurrentSize() const;
+    const Data& getConst() const;
     void printArray() const;
+    void printVBC() const;
 };
 
 template<class Data>
 O1Array<Data>::O1Array(const O1Array<Data>& other) : constant(other.constant), max_size(other.max_size), top(other.top),
  is_dynamic(other.is_dynamic){
     int other_size = other.getMaxSize();
-    values = new Data[other_size];
-    C = new int[other_size];
-    B = new int[other_size];
+    Data* tmp_values = new Data[other_size];
+    int* tmp_C = new int[other_size];
+    int* tmp_B = new int[other_size];
 
     for(int i = 0 ; i < other_size; ++i){
         if(other(i) != other.constant){
-            values[i] = other.values[i];
-            B[i] = other.B[i];
+            tmp_values[i] = other.values[i];
+            tmp_B[i] = other.B[i];
         }
-        C[i] = other.C[i];
+        tmp_C[i] = other.C[i];
     }
+    /*
+    for(){
+        O1Array<> arr = other_r;
+        //is there a memory leak?
+    }
+    */
+    values = tmp_values;
+    B = tmp_B;
+    C = tmp_C;
 }
 
 template<class Data>
@@ -112,16 +124,12 @@ void O1Array<Data>::expand(){
 
 template<class Data>
 O1Array<Data>::O1Array(Data constant,int max_size, int top, bool is_dynamic) : constant(constant), max_size(max_size),
-top(top), is_dynamic(is_dynamic){
-    values = new Data[INITIAL_SIZE];
-    B = new int[INITIAL_SIZE];
-    C = new int[INITIAL_SIZE];
-}
+top(top), is_dynamic(is_dynamic), values(new Data[INITIAL_SIZE]), B(new int[INITIAL_SIZE]), C(new int[INITIAL_SIZE]){}
 
 template<class Data>
 O1Array<Data>::~O1Array(){
-    delete[] values;
-    delete[] B;
+    // delete[] values;
+    // delete[] B;
     delete[] C;
 }
 
@@ -152,10 +160,12 @@ const Data& O1Array<Data>::operator()(unsigned int i) const{
 
 template<class Data>
 bool O1Array<Data>::is_initialized(unsigned int i) const{
-    if(top >= max_size){
-        return true;
-    }
-    return (B[i] < top && B[i] >=0 && C[B[i]] == i);
+    // if(top >= max_size){
+    //     return true;
+    // }
+    bool res = false;
+    res = (B[i] < top && B[i] >=0 && C[B[i]] == i);
+    return res;
 }
 
 template<class Data>
@@ -166,6 +176,11 @@ int O1Array<Data>::getMaxSize() const{
 template<class Data>
 int O1Array<Data>::getCurrentSize() const{
     return top;
+}
+
+template<class Data>
+const Data& O1Array<Data>::getConst() const{
+    return constant;
 }
 
 //return true when there was a change
@@ -180,10 +195,21 @@ bool O1Array<Data>::deleteElem(unsigned int i){
     top--;
     return true;
 }
+
 template<class Data>
 void O1Array<Data>::printArray() const{
     for(int i = 0; i < getMaxSize(); i++){
         std::cout<<"array["<<i<<"] = "<<this->operator()(i)<<std::endl;
+    }
+}
+
+template<class Data>
+void O1Array<Data>::printVBC() const{
+    for(int i = 0; i < getCurrentSize(); i++){
+        std::cout<<"array[C["<<i<<"]] = "<<this->operator()(C[i])<<std::endl;
+        std::cout<<"B[C["<<i<<"]] = "<<B[C[i]]<<std::endl;
+        std::cout<<"C["<<i<<"] = "<<C[i]<<std::endl;
+        std::cout<<""<<std::endl;
     }
 }
 
