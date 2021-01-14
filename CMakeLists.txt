@@ -5,6 +5,7 @@ include(CTest)
 enable_testing()
 
 add_executable(Test test.cpp HashTable.cpp)
+add_executable(array_test simple_array_test.cpp)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

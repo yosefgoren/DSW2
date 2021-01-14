@@ -12,6 +12,7 @@ return false; }
 bool testCtors();
 
 int main(int, char**) {
+
     HashTable table;
     table.insertKey(234124);
     table.insertKey(234104);
