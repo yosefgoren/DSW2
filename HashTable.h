@@ -18,7 +18,6 @@ typedef SearchTree<void*,Lecture>::Node Tnode;
 // }
 
 class HashTable{
-    O1Array<DLinkedList<O1Array<Tnode>>*> table;
     // function<int(int,int)> func;
     int num_of_keys;
     int table_size;
@@ -26,19 +25,21 @@ class HashTable{
     static const int INITIAL_SIZE = 10;
     static const int EXPAND_FACTOR = 2;
     static constexpr double SHRINK_FACTOR = 0.5;
-    static constexpr double EXPAND_RATIO = 0.75;//avoid O1Array from expanding itself
+    static constexpr double EXPAND_RATIO = 1;//avoid O1Array from expanding itself
     static constexpr double SHRINK_RATIO = 0.25;
     void expandOrShrink();
     bool checkExpand() const;
     bool checkShrink() const;
 public:
+    O1Array<DLinkedList<O1Array<Tnode>*>*> table;
     HashTable();
-    // HashTable(int size);//probably we dont need this
+    HashTable(int size);
     ~HashTable();
+    HashTable& operator=(const HashTable& other);
     // DLinkedList<O1Array<Lecture*>>*& operator[](unsigned int i);
     bool insertKey(int key);
     void deleteKey(int key);
-    DLinkedList<O1Array<Tnode>>::Node Find(int key) const;
+    DLinkedList<O1Array<Tnode>*>::Node Find(int key) const;
     void printTable() const;
 };
 
