@@ -105,6 +105,7 @@ public:
         size = other.size;
         num_elements = other.num_elements;
         default_value = other.default_value;
+        return *this;
     }
 
     /**
