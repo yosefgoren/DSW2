@@ -17,11 +17,12 @@ public:
     CoursesManager2() = default;
     CoursesManager2(const CoursesManager2&) = delete;
     CoursesManager2& operator=(const CoursesManager2&) = delete;
-    StatusType AddCourse(int courseID, int numOfClasses);
+    StatusType AddCourse(int courseID);
     StatusType RemoveCourse(int courseID);
+    StatusType AddClass(int courseID, int classID);
     StatusType WatchClass(int courseID, int classID, int time);
     StatusType TimeViewed(int courseID, int classID, int *timeViewed);
-    StatusType GetMostViewedClasses(int numOfClasses, int *courses, int *classes);
+    StatusType GetIthWatchedClass(int i, int* courseID, int* classID);
 };
 
 
