@@ -35,7 +35,7 @@ StatusType CoursesManager2::RemoveCourse(int courseID)
     return SUCCESS;
 }
 
-StatusType CoursesManager2::AddClass(int courseID, int classID)
+StatusType CoursesManager2::AddClass(int courseID, int* classID)
 {
     try
     {
@@ -47,7 +47,7 @@ StatusType CoursesManager2::AddClass(int courseID, int classID)
             course_hub->data = new Array<TreeNode>(1, nullptr, true);
 
         Array<TreeNode>& lectures_array = *(course_hub->data);
-        classID =  lectures_array.setTopElement(nullptr);
+        *classID =  lectures_array.setTopElement(nullptr);
     }
     catch(...){return ALLOCATION_ERROR;}
     return SUCCESS;
@@ -62,7 +62,7 @@ StatusType CoursesManager2::WatchClass(int courseID, int classID, int time)
             return FAILURE;
 
         Array<TreeNode>& lectures_array = *(course_hub->data);
-        if(lectures_array.getUsedSize() >= courseID)
+        if(lectures_array.getUsedSize() < classID + 1)
             return INVALID_INPUT;
 
         TreeNode current_lecture = lectures_array[classID];
@@ -85,7 +85,7 @@ StatusType CoursesManager2::TimeViewed(int courseID, int classID, int *timeViewe
 
         Array<TreeNode>& lectures_array = *(course_hub->data);
         TreeNode current_lecture = lectures_array[classID];
-        if(lectures_array.getUsedSize() >= courseID)
+        if(lectures_array.getUsedSize() < classID + 1)
             return INVALID_INPUT;
         *timeViewed = current_lecture == nullptr ? 0 : current_lecture->key.time;
     }
