@@ -1,5 +1,6 @@
 #include <iostream>
 #include "HashTable.h"
+#include "O1ArrayInit.h"
 
 using std::to_string;
 using std::cout;

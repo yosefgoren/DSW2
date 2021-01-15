@@ -4,7 +4,7 @@
 #include <iostream>
 #include "assert.h"
 #include <functional>
-#include "O1ArrayInit.h"
+#include "array.h"
 #include "double_linked_list.h"
 #include "Lecture.h"
 #include "RankTree.h"
@@ -19,9 +19,10 @@ typedef SearchTree<void*,Lecture>::Node Tnode;
 
 class HashTable{
     // function<int(int,int)> func;
+    Array<DLinkedList<Array<Tnode>*>*> table;
     int num_of_keys;
     int table_size;
-    //make sure INITIAL_SIZE in O1Array is the same
+    //make sure INITIAL_SIZE in Array is the same
     static const int INITIAL_SIZE = 10;
     static const int EXPAND_FACTOR = 2;
     static constexpr double SHRINK_FACTOR = 0.5;
@@ -31,16 +32,17 @@ class HashTable{
     bool checkExpand() const;
     bool checkShrink() const;
 public:
-    O1Array<DLinkedList<O1Array<Tnode>*>*> table;
     HashTable();
     HashTable(int size);
     ~HashTable();
     HashTable& operator=(const HashTable& other);
-    // DLinkedList<O1Array<Lecture*>>*& operator[](unsigned int i);
+    // DLinkedList<Array<Lecture*>>*& operator[](unsigned int i);
     bool insertKey(int key);
     void deleteKey(int key);
-    DLinkedList<O1Array<Tnode>*>::Node Find(int key) const;
+    DLinkedList<Array<Tnode>*>::Node Find(int key) const;
     void printTable() const;
+    int getNumOfKeys() const;
+    int getTableSize() const;
 };
 
 #endif

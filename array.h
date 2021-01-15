@@ -60,8 +60,7 @@ public:
     /**
      * @brief returns whether or not an item at 'index' is initialized, the fucntion assumes 'Data' has 'operator!=()'.
      */
-    bool is_initialized(int index)
-    {
+    bool is_initialized(int index) const{
         return data[index] != default_value;
     }
 
@@ -124,6 +123,11 @@ public:
         assert(!is_stack_array);
         assert(i < size);
         return data[i];
+    }
+
+    const Data& getDefaultValue()
+    {
+        return default_value;
     }
 
     int getMaxSize() const{

@@ -3,9 +3,9 @@
 #include "HashTable.h"
 
 
-HashTable::HashTable() : table(O1Array<DLinkedList<O1Array<Tnode>*>*>(nullptr,INITIAL_SIZE,0,false)), num_of_keys(0), table_size(INITIAL_SIZE){}
+HashTable::HashTable() : table(Array<DLinkedList<Array<Tnode>*>*>(INITIAL_SIZE,nullptr,false)), num_of_keys(0), table_size(INITIAL_SIZE){}
 
-HashTable::HashTable(int size) : table(O1Array<DLinkedList<O1Array<Tnode>*>*>(nullptr,size,0,false)), num_of_keys(0), table_size(size){}
+HashTable::HashTable(int size) : table(Array<DLinkedList<Array<Tnode>*>*>(INITIAL_SIZE,nullptr,false)), num_of_keys(0), table_size(size){}
 
 HashTable& HashTable::operator=(const HashTable& other){
     table = other.table;
@@ -19,11 +19,11 @@ HashTable& HashTable::operator=(const HashTable& other){
  * true - key was found in the DS
  * false - key was not found in the DS
 */
-DLinkedList<O1Array<Tnode>*>::Node HashTable::Find(int key) const{
+DLinkedList<Array<Tnode>*>::Node HashTable::Find(int key) const{
     if(!table.is_initialized(key%table_size)){
         return nullptr;
     }
-    return table(key%table_size)->find_key(key);
+    return table[key%table_size]->find_key(key);
 }
 
 /**insert a key when its not in the DS already.
@@ -34,8 +34,9 @@ DLinkedList<O1Array<Tnode>*>::Node HashTable::Find(int key) const{
 bool HashTable::insertKey(int key){
     //add a new list if its the first key in this index
     if(!table.is_initialized(key%table_size)){
-        table[key%table_size] = new DLinkedList<O1Array<Tnode>*>();
-        table(key%table_size)->insertLast(key,nullptr);
+        table[key%table_size] = new DLinkedList<Array<Tnode>*>();
+        table[key%table_size]->insertLast(key,nullptr);
+        table.increment();
         num_of_keys++;
         expandOrShrink();
         return true;
@@ -45,7 +46,7 @@ bool HashTable::insertKey(int key){
         return false;
     }
 
-    table(key%table_size)->insertLast(key,nullptr);
+    table[key%table_size]->insertLast(key,nullptr);
     num_of_keys++;
     expandOrShrink();
     return true;
@@ -58,17 +59,22 @@ void HashTable::deleteKey(int key){
         return;
     }
     //check if the key is in the list and act accordingly
-    DLinkedList<O1Array<Tnode>*>::Node tmp_node = table(key%table_size)->find_key(key);
+    DLinkedList<Array<Tnode>*>::Node tmp_node = table[key%table_size]->find_key(key);
     if(tmp_node != nullptr){
         tmp_node->removeFromList();
         num_of_keys--;
         expandOrShrink();
     }
     //avoid empty lists
-    if((table(key%table_size))->getSize() == 0){
-        delete table(key%table_size);
-        table.deleteElem(key%table_size);
-        // table[key%table_size] = nullptr;//make sure each element is actually a pointer
+    
+    if(table[key%table_size] == nullptr){
+        table.decrement();
+        return;
+    }
+    if((table[key%table_size])->getSize() == 0){
+        delete table[key%table_size];
+        table[key%table_size] = table.getDefaultValue();
+        table.decrement();
     }
     return;
 }
@@ -81,7 +87,7 @@ void HashTable::deleteKey(int key){
 HashTable::~HashTable(){
     for(int i = 0; i < table_size; ++i){
         if(table.is_initialized(i)){
-            delete table(i);
+            delete table[i];
         }
     }
 }
@@ -92,6 +98,14 @@ bool HashTable::checkExpand() const{
 
 bool HashTable::checkShrink() const{
     return double(num_of_keys)/table_size <= SHRINK_RATIO && num_of_keys > INITIAL_SIZE/2;
+}
+
+int HashTable::getNumOfKeys() const{
+    return num_of_keys;
+}
+
+int HashTable::getTableSize() const{
+    return table_size;
 }
 
 void HashTable::expandOrShrink(){
@@ -105,50 +119,38 @@ void HashTable::expandOrShrink(){
     else{
         return;
     }
-    // O1Array<DLinkedList<O1Array<Tnode>*>*> tmp_table(nullptr,new_size,0,false);
-    DLinkedList<int> tmp_list;
+    Array<DLinkedList<Array<Tnode>*>*> tmp_table(new_size,nullptr,false);
     for(int i = 0; i < table_size; ++i){
         //copy only legit keys
         if(!table.is_initialized(i)){
             continue;
         }
-        // auto a = *table(0);
-        //itterate over a list and reposition each element to its correct place in the new table
-        for(auto elem : *table(i)){
-            tmp_list.insertLast(elem->key);
-            // if(tmp_table.is_initialized(elem->key%new_size)){
-            //     tmp_table(elem->key%new_size)->insertLast(elem->key,elem->data);//fix and change Data to ptr
-            // }
-            // else{
-            //     tmp_table[elem->key%new_size] = new DLinkedList<O1Array<Tnode>*>();
-            //     tmp_table(elem->key%new_size)->insertLast(elem->key,elem->data);
-            // }
+        for(auto elem : *table[i]){
+            if(!tmp_table.is_initialized(elem->key%new_size)){
+                tmp_table[elem->key%new_size] = new DLinkedList<Array<Tnode>*>();
+                tmp_table[elem->key%new_size]->insertLast(elem->key,elem->data);
+                tmp_table.increment();
+            }
+            else{
+                tmp_table[elem->key%new_size]->insertLast(elem->key,elem->data);
+            }
         }
     }
-    tmp_list.print_list();
-    // tmp_list.print_list();
 
-    HashTable tmp_res(new_size);
-    for(auto CIDNode : tmp_list){
-        tmp_res.insertKey(CIDNode->key);
+    for(int i = 0; i < table_size; ++i){
+        if(table.is_initialized(i)){
+            delete table[i];
+        }
     }
-    //delete the old table
-    // for(int i = 0; i < table_size; ++i){
-    //     if(!table.is_initialized(i)){
-    //         continue;
-    //     }
-    //     delete table(i);
-    // }
-    *this = tmp_res;
-    this->printTable();
-    // table = tmp_table;
-    // table_size = new_size;
+    table = tmp_table;
+    table_size = new_size;
+
 }
 
 void HashTable::printTable() const{
     for(int i = 0; i < table_size; ++i){
         if(table.is_initialized(i)){
-            table(i)->print_list();
+            table[i]->print_list();
         }
     }
     std::cout<<""<<std::endl;
