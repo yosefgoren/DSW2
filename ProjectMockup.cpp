@@ -3,11 +3,16 @@
 
 using std::set;
 
+int MCM::lecturesInCourse(int courseID)
+{
+    return courses_list[courseID];
+}
+ 
 StatusType MCM::AddCourse(int courseID)
 {
     if(courses_list.count(courseID) != 0)
         return FAILURE;
-    courses_list.insert(courseID, 0);
+    courses_list.insert(std::pair<int, int>(courseID, 0));
     return SUCCESS;
 }
 
@@ -15,6 +20,7 @@ StatusType MCM::AddClass(int courseID, int* classID)
 {
     *classID = courses_list[courseID];
     lect_list.insert(MLecture(courseID++, *classID, 0));
+    return SUCCESS;
 }
 
 StatusType MCM::RemoveCourse(int courseID, int& num_removed)
@@ -61,11 +67,12 @@ StatusType MCM::GetIthWatchedClass(int i, int *courseID, int *classID)
     int counter = 0;
     for(auto lect : lect_list)
     {
-        if(counter >= i)
+        if(counter++ >= i)
+            if(lect.time == 0)
+                return FAILURE;
+            *courseID = lect.courseID;
+            *classID = lect.classID;
             break;
-        *courseID = lect.courseID;
-        *classID = lect.classID;
-        counter++;
     }
     return SUCCESS;
 }
