@@ -34,12 +34,15 @@ public:
 
 class MCM
 {
+public:
     set<MLecture> lect_list;
     map<int, int> courses_list;
-public:
+    
     MCM() = default;
     MCM(const MCM&) = delete;
     MCM& operator=(const MCM&) = delete;
+
+    int lecturesInCourse(int courseID);
     StatusType AddCourse(int courseID);
     StatusType RemoveCourse(int courseID, int& num_removed);
     StatusType AddClass(int courseID, int* classID);
