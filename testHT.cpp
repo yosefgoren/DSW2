@@ -14,9 +14,9 @@ return false; }
 
 void TesterHT::printElements() const{
     set<int> table_set;
-    for(int i = 0; i < table.getTableSize(); i++){
-        if(table.is_initialized(i)){
-            for(const auto& elem : *table[i]){
+    for(int i = 0; i < hash_table.getTableSize(); i++){
+        if(hash_table.table.is_initialized(i)){
+            for(const auto& elem : *hash_table.table[i]){
                 table_set.insert(elem->key);
             }
         }
@@ -24,69 +24,95 @@ void TesterHT::printElements() const{
     for(auto elem : table_set){
         cout<<elem<<" ";
     }
-    cout<<"||"<<;
+    cout<<"||";
     for(auto elem : table_set){
         cout<<elem<<" ";
     }
 }
 
-ActionType TesterHT::pickAction() const{
+TesterHT::ActionType TesterHT::pickAction() const{
+    // srand(time(NULL));
     double command_type_seed = (double)(rand()%100)/100;
-    double sum = 0;
     int res = 0;
-    for(int i = 0; i< NUM_OF_ACTIONS; i++){
-        sum+= frequences[i];
-    }
-    for(int i = 0; i< NUM_OF_ACTIONS; i++){
-        if(sum >= frequences[i])
+    // for(int i = 0; i< command_type_seed; i++){
+    //     sum+= frequences[i];
+    // }
+    while(command_type_seed>= 0){
+        if(command_type_seed >= frequences[res]){
+            command_type_seed-= frequences[res];
             res++;
+            continue;
+        }
+        command_type_seed-= frequences[res];
     }
     return (ActionType)res;
-
+}
 bool TesterHT::test(){
-    ActionType func = pickAction();
-    srand (time(NULL));
-    int key = rand() % KEY_MAX_VAL;
-    switch (func)
-    {
-    case insertKey:
-        table.insertKey(key)
-        courses_set.insert(key);
-        if(PRINT){
-            printElements();
-        }
-        break;
-    case deleteKey:
-        table.deleteKey(key)
-        courses_set.erase(key);
-        if(PRINT){
-            printElements();
-        }
-        break;
-    case Find:
-        DLinkedList<Array<Tnode>*>::Node key_node = table.Find(key);
-        bool is_in = courses_set.find(element) != courses_set.end();
-        if(is_in){
-            ASSERT_TEST(key_node != nullptr);
-        }
-        break;
-    case getNumOfKeys:
-        int num_of_key = table.getNumOfKeys();
-        ASSERT_TEST(courses_set.size() == num_of_key);
-        break;
-    case getTableSize:
-        int table_size = table.getNumOfKeys();
-        ASSERT_TEST(table_size >= table.getNumOfKeys());
-        break;
-    default:
-        ASSERT_TEST(false);
-        break;
-    }    
-}  
+    srand(time(NULL));
+        int print_counter = 0;
+        int table_size = -1;
+        int num_of_key = -1;
+        bool is_in = false;
+    for(int k = 0; k < ITERATIONS; ++k){
+        cout<<"iteration: --"<<k<<"-- out of --"<<ITERATIONS<<"--"<<endl;
+        ActionType func = pickAction();
+        int key = rand() % KEY_MAX_VAL;
+        DLinkedList<Array<Tnode>*>::Node key_node = nullptr;
+        switch (func)
+        {
+        case insertKey:
+            hash_table.insertKey(key);
+            courses_set.insert(key);
+            print_counter++;
+            if(PRINT && print_counter%PRINT_FREQ == 0){
+                printElements();
+                cout<<""<<endl;
+            }
+            break;
+        case deleteKey:
+            hash_table.deleteKey(key);
+            courses_set.erase(key);
+            print_counter++;
+            if(PRINT && print_counter%PRINT_FREQ == 0){
+                printElements();
+                cout<<""<<endl;
+            }
+            break;
+        case Find:
+            key_node = hash_table.Find(key);
+            is_in = courses_set.find(key) != courses_set.end();
+            if(is_in){
+                ASSERT_TEST(key_node != nullptr);
+            }
+            break;
+        case getNumOfKeys:
+            num_of_key = hash_table.getNumOfKeys();
+            ASSERT_TEST(courses_set.size() == num_of_key);
+            if(PRINT && print_counter%PRINT_FREQ == 0){
+                cout<<"expected num_keys: "<<num_of_key<<" result: "<<courses_set.size()<<endl;
+                cout<<""<<endl;
+            }
+            break;
+        case getTableSize:
+            table_size = hash_table.getTableSize();
+            ASSERT_TEST(table_size >= hash_table.getNumOfKeys());
+            if(PRINT && print_counter%PRINT_FREQ == 0){
+                cout<<"table size: "<<table_size<<" set size: "<<courses_set.size()<<endl;
+                cout<<""<<endl;
+            }
+            break;
+        default:
+            cout<<k;
+            ASSERT_TEST(false);
+            break;
+        } 
+    }
+        return true;
+}   
 
 int main(){   
-    TesterHT test1();
-    test1.test();
+    TesterHT testing;
+    testing.test();
     // HashTable table(10);
     // set<int> courses_set;
     
