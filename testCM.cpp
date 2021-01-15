@@ -12,6 +12,7 @@ using std::endl;
 using std::string;
 using std::vector;
 using std::map;
+using std::to_string;
 
 typedef CoursesManager2 PCM;
 typedef std::pair<int,int> Pair;
@@ -19,29 +20,37 @@ typedef std::pair<int,int> Pair;
 class CMTester
 {
 public:
-    CMTester():mockupManager(), properManager(), lastAction(""), size(0), print_actions(true){}
+    CMTester():mockupManager(), properManager(), lastAction(""), num_lectures(0), print_actions(true){}
 
     MCM mockupManager;
     PCM properManager;
     string lastAction;
-    int size;
+    int num_lectures;
     bool print_actions;
     CMTester& enablePrinting(){print_actions = true; return *this;}
     CMTester& disablePrinting(){print_actions = false; return *this;}
 
-    void insertCourse(int courseID, int num_classes)
+    void insertCourse(int courseID)
     {
         mockupManager.AddCourse(courseID);
         properManager.AddCourse(courseID);
-        size += num_classes;
-        lastAction = "insert(CMT): courseID = "+std::to_string(courseID)
-            +", num of classes = "+std::to_string(num_classes);
+        lastAction = "insert(CMT): courseID = "+std::to_string(courseID);
         if(print_actions)
             cout << lastAction << endl;
     }
+
+    void insertClass(int courseID, int classID)
+    {
+        mockupManager.AddClass(courseID, &classID);
+        properManager.AddClass(courseID, &classID);
+        ++num_lectures;
+    }
+
     void remove(int courseID)
     {
-        size -= mockupManager.RemoveCourse(courseID);
+        int num_removed;
+        mockupManager.RemoveCourse(courseID, num_removed);
+        num_lectures -= num_removed;
         properManager.RemoveCourse(courseID);
 
         lastAction = "remove(CMT): courseID = "+std::to_string(courseID);
@@ -58,7 +67,6 @@ public:
             cout << lastAction << endl;
     }
 
-    static const int NO_EXPECTED_RESULT = -1;
     virtual bool TimeViewed(int courseID, int classID, int expected_result = NO_EXPECTED_RESULT)
     {
         int mockupValue = -1;//an initial value that cannot be returned naturaly
@@ -79,33 +87,43 @@ public:
         return mockupValue==properValue;
     }
 
-    static const int CHECK_ALL = -1;
-    virtual bool getIthWatchedClass(int class_index = CHECK_ALL)
+    static const int NO_EXPECTED_RESULT = -1;
+    virtual bool getIthWatchedClass(int class_index)
     {
-        if(num_of_classes == CHECK_ALL)
-            num_of_classes = size;
-        
-        int mockupCourses[num_of_classes];
-        int mockupClasses[num_of_classes];
-        mockupManager.GetMostViewedClasses(num_of_classes, mockupCourses, mockupClasses);
+        int mockupCourse = -1, mockupClass = -1, properCourse = -1, properClass = -1;
+        mockupManager.GetIthWatchedClass(class_index, &mockupCourse, &mockupClass);
+        properManager.GetIthWatchedClass(class_index, &properCourse, &properClass);
 
-        int properCourses[num_of_classes];
-        int properClasses[num_of_classes];
-        properManager.GetIthWatchedClass(num_of_classes, properCourses, properClasses);
+        lastAction = "IthMostViewed(CMT): lecture rating/index = "+to_string(class_index)
+            +". mockup: course = "+to_string(mockupCourse)+", class = "+to_string(mockupClass)
+            +" |  proper: course = "+to_string(properCourse)+", class = "+to_string(properClass);
 
-        string MCR = "", MLR = "", PCR = "", PLR = "";
-        for(int i = 0; i < num_of_classes; ++i)
-        {
-            MCR += std::to_string(mockupCourses[i])+' ';
-            MLR += std::to_string(mockupClasses[i])+' ';
-            PCR += std::to_string(properCourses[i])+' ';
-            PLR += std::to_string(properClasses[i])+' ';
-        }
-        lastAction = "MostViewedClasses(CMT): number of classes = "+std::to_string(num_of_classes)
-            +".\n   mockup: "+MCR+"| "+MLR+"\n   proper: "+PCR+"| "+PLR;
         if(print_actions)
             cout << lastAction << endl;
-        return MCR==PCR && MLR==PLR;
+        return mockupCourse==properCourse && mockupClass==properClass;
+    }
+
+    bool fullTest(bool paired_format = true)
+    {
+        vector<string> MCR, MLR, PCR, PLR;
+
+        int tmp_class = -1;//just a default value to detect unexpected behavior
+        int tmp_course = -1;
+        for(int i = 0; i < num_lectures; ++i)
+        {
+            mockupManager.GetIthWatchedClass(i, &tmp_course, &tmp_class);
+            MCR.insert(tmp_course);
+            MLR.insert(tmp_class);
+
+            properManager.GetIthWatchedClass(i, &tmp_course, &tmp_class);
+            PCR.insert(tmp_course);
+            PLR.insert(tmp_class);
+        }
+        lastAction = "FullTest(CMT): \0proper: "
+        + (paired_format ? mixCat(PCR, PLR) : cat(PCR) + " | " + cat(PLR)) 
+        + "\0mockup: " + (paired_format ? : mixCat(MCR, MLR) : cat(MCR) + " | " + cat(MLR));
+
+        return MCR == PCR && MLR == PLR;
     }
 };
 
@@ -129,44 +147,43 @@ string manualTest()
     
     //so the parent object of the tree of lectures should be ptr to the tree of all CID's or it should one of it's nodes?
 
-    CMTester t;
-    t.disablePrinting().insert(20, 3);
-    t.watch(20, 0, 100);
+    // CMTester t;
+    // t.disablePrinting().insert(20, 3);
+    // t.watch(20, 0, 100);
     
-    t.watch(20, 2, 200);
+    // t.watch(20, 2, 200);
 
-    t.watch(20, 2, 100);
+    // t.watch(20, 2, 100);
 
-    ASSERT(t.TimeViewed(20, 0, 100));
-    ASSERT(t.TimeViewed(20, 1, 0));
-    ASSERT(t.TimeViewed(20, 2, 300));
+    // ASSERT(t.TimeViewed(20, 0, 100));
+    // ASSERT(t.TimeViewed(20, 1, 0));
+    // ASSERT(t.TimeViewed(20, 2, 300));
 
-    t.watch(20, 0, 200);
-    ASSERT(t.TimeViewed(20, 0, 300));
-    t.watch(20, 1, 100);
-    ASSERT(t.TimeViewed(20, 1, 100));
+    // t.watch(20, 0, 200);
+    // ASSERT(t.TimeViewed(20, 0, 300));
+    // t.watch(20, 1, 100);
+    // ASSERT(t.TimeViewed(20, 1, 100));
 
-    ASSERT(t.getMostViewedClasses(3));
-    //new part:
-    t.remove(20);
+    // ASSERT(t.getMostViewedClasses(3));
+    // //new part:
+    // t.remove(20);
     
-    t.insert(20, 10);
-    t.insert(10, 5);
-    t.insert(40, 3);
-    t.insert(30, 7);
-    ASSERT(t.getMostViewedClasses());
+    // t.insert(20, 10);
+    // t.insert(10, 5);
+    // t.insert(40, 3);
+    // t.insert(30, 7);
+    // ASSERT(t.getMostViewedClasses());
 
-    t.watch(10, 4, 100);
-    t.watch(10, 2, 100);
-    t.watch(30, 6, 300);
-    t.watch(40, 0, 400);
-    t.watch(10, 3, 100);
-    ASSERT(t.getMostViewedClasses());
+    // t.watch(10, 4, 100);
+    // t.watch(10, 2, 100);
+    // t.watch(30, 6, 300);
+    // t.watch(40, 0, 400);
+    // t.watch(10, 3, 100);
+    // ASSERT(t.getMostViewedClasses());
     
     return "SUCCESS";
 }
 
-const int NUM_COMMAND_TYPES = 6;
 enum ActionType
 {
     INSERT_COURSE,
@@ -174,21 +191,8 @@ enum ActionType
     REMOVE,
     WATCH,
     TIME_VIEWD,
-    MOST_VIEWD,
+    ITH_VIEWD,
 };
-ActionType getRandomAction(vector<double> actionProvobilities)
-{
-    double command_type_seed = (double)(rand()%100)/100;//something between 0 and 1.
-    double prov_sum = 0;
-    for(int i = INSERT_COURSE; i < NUM_COMMAND_TYPES; ++i)
-    {
-        prov_sum += actionProvobilities[i];
-        if(command_type_seed <= prov_sum)
-            return (ActionType)i;
-    }
-    assert(false);
-    return INSERT_COURSE;
-}
 
 string autoTest()
 {
@@ -200,6 +204,17 @@ string autoTest()
     const int MAX_TIME_VIEWD = 10;
     const bool print_details = true;
     const bool print_full_always = true;
+    const vector<double> provobilities()
+    {
+        // INSERT_COURSE
+        // INSERT_LECTURE
+        // REMOVE
+        // WATCH
+        // TIME_VIEWD
+        // ITH_VIEWD
+        return vector<double>({0.15, 0, 0.5, 0.05, 0.15, 0.15});
+    }
+
     srand(1);
 
     //test tools:
@@ -208,16 +223,12 @@ string autoTest()
     if(!print_details)
         test_bench.disablePrinting();
 
+    
+    //actual test:
     for(int j = 0; j < NUM_TEST_ITTIRATIONS; ++j)
     {
-        if(j==172)
-        {
-            cout << endl;
-        }
         if(print_full_always)
-        {
-            ASSERT(test_bench.getMostViewedClasses());
-        }
+            test_bench.fullTest();
 
         cout << endl;
         if(print_details)
@@ -229,27 +240,29 @@ string autoTest()
             cout << j << ": ";
         }
 
-        if(j == 166)
-        {
-            ASSERT(test_bench.getMostViewedClasses());
-        }
 
-        ActionType action_type = getRandomAction(vector<double>({0.15, 0, 0.65, 0.05, 0.15}));
-        
-        if(action_type==INSERT)
+        ActionType action_type = getRandomAction(provobilities());
+        switch (action_type)
         {
-            //cout << "Meta-auto test - INSERT" << endl;
-
+        case INSERT_COURSE://cout << "Meta-auto test - INSERT" << endl;
             int courseID = (rand()%MAX_COURSE_ID)+1;
             if(courses_tracker.count(courseID) != 0)
-                continue;
+                break;
 
-            int num_of_classes = (rand()%MAX_CLASSES_IN_COURSE)+1;
-
-            test_bench.insert(courseID, num_of_classes);
+            test_bench.insert(courseID);
             courses_tracker.insert(Pair(courseID, num_of_classes));
-            continue;
+            break;
+
+        case MOST_VIEWD:
+            /* code */
+            break;
+
+        case REMOVE:
+            /* code */
+            break;
         }
+
+        
         if(action_type==MOST_VIEWD)
         {
             //cout << "Meta-auto test - MOST_VIEWD" << endl;
@@ -301,4 +314,45 @@ string autoTest()
     }
 
     return "SUCCESS";
+}
+
+ActionType getRandomAction(const vector<double>& actionProvobilities)
+{
+    double tmp_sum = 0;
+    for(auto item : actionProvobilities)
+        tmp_sum += item;
+    assert(tmp_sum == 1.0);
+
+    double command_type_seed = (double)(rand()%100)/100;//something between 0 and 1.
+    double prov_sum = 0;
+    for(int i = INSERT_COURSE; i < actionProvobilities.size(); ++i)
+    {
+        prov_sum += actionProvobilities[i];
+        if(command_type_seed <= prov_sum)
+            return (ActionType)i;
+    }
+    assert(false);
+    return INSERT_COURSE;
+}
+
+string cat(const vector<string>& vec, cosnt string& spacer = ", ")
+{
+    string result = "";
+    for(auto item : vec)
+        result += item + spacer;
+
+    return result.substr(0, result.size()-spacer.size());
+}
+
+string mixCat(const vector<string>& left, const vector<string>& right, 
+    const string& in_pair_spacer = " | ", const string& ext_spacer = ", ")
+{
+    string result = "";
+    auto left_it = left.begin();
+    auto right_it = right.begin();
+    while(left_it != left.end() && right_it != right.end())
+    {
+        result += *(left_it++) + in_pair_spacer + *(right_it++) + ext_spacer; 
+    }
+    return result.substr(0, result.size()-ext_spacer.size());
 }

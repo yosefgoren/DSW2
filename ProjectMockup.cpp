@@ -7,8 +7,14 @@ StatusType MCM::AddCourse(int courseID)
 {
     if(courses_list.count(courseID) != 0)
         return FAILURE;
-    courses_list.insert(courseID);
+    courses_list.insert(courseID, 0);
     return SUCCESS;
+}
+
+StatusType MCM::AddClass(int courseID, int* classID)
+{
+    *classID = courses_list[courseID];
+    lect_list.insert(MLecture(courseID++, *classID, 0));
 }
 
 StatusType MCM::RemoveCourse(int courseID, int& num_removed)

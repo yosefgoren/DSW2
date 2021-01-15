@@ -4,9 +4,11 @@
 #include <set>
 #include <vector>
 #include "library2.h"
+#include <map>
 
 using std::vector;
 using std::set;
+using std::map;
 
 class MLecture
 {
@@ -33,14 +35,14 @@ public:
 class MCM
 {
     set<MLecture> lect_list;
-    set<int> courses_list;
+    map<int, int> courses_list;
 public:
     MCM() = default;
     MCM(const MCM&) = delete;
     MCM& operator=(const MCM&) = delete;
     StatusType AddCourse(int courseID);
     StatusType RemoveCourse(int courseID, int& num_removed);
-    StatusType AddClass(int courseID, int classID);
+    StatusType AddClass(int courseID, int* classID);
     StatusType WatchClass(int courseID, int classID, int time);
     StatusType TimeViewed(int courseID, int classID, int *timeViewed);
     StatusType GetIthWatchedClass(int i, int* courseID, int* classID);
