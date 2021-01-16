@@ -109,7 +109,7 @@ public:
         mockupManager.AddClass(courseID, &MR);
         properManager.AddClass(courseID, &PR);
 
-        lastAction = "insertCourse(CMT): mockup returned lectureID: "+to_string(MR)
+        lastAction = "insertLecture(CMT): mockup returned lectureID: "+to_string(MR)
         +", proper returned lectureID: "+to_string(PR);
         
         if(print_actions)
@@ -200,9 +200,9 @@ public:
             PCR.push(to_string(tmp_course));
             PLR.push(to_string(tmp_class));
         }
-        lastAction = "FullTest(CMT): \0proper: "
+        lastAction = "FullTest(CMT):\nproper: "
         + (paired_format ? mixCat(PCR, PLR) : cat(PCR) + " | " + cat(PLR)) 
-        + "\0mockup: " + (paired_format ? mixCat(MCR, MLR) : cat(MCR) + " | " + cat(MLR));
+        + "\nmockup: " + (paired_format ? mixCat(MCR, MLR) : cat(MCR) + " | " + cat(MLR));
 
         if(print_actions)
             cout << lastAction << endl;
@@ -270,7 +270,7 @@ const vector<double> provobilities()
     // WATCH
     // TIME_VIEWD
     // ITH_VIEWD
-    return vector<double>({0.15, 0, 0.5, 0.05, 0.15, 0.15});
+    return vector<double>({0.25, 0.2, 0, 0.35, 0.1, 0.1});
 }
     
 string autoTest()
@@ -295,7 +295,7 @@ string autoTest()
     for(int j = 0; j < NUM_TEST_ITTIRATIONS; ++j)
     {
         if(print_full_always)
-            test_bench.fullTest();
+            ASSERT(test_bench.fullTest());
 
         cout << endl;
         if(print_details)
@@ -307,7 +307,6 @@ string autoTest()
             cout << j << ": ";
         }
 
-
         //inner switch variables:
         int courseID = -1, lectureID = -1, watchTime = -1, index = -1;
         ActionType action_type = getRandomAction(provobilities());
@@ -318,7 +317,11 @@ string autoTest()
             courseID = (rand()%MAX_COURSE_ID)+1;
             //stop if that course is already in the system:
             if(test_bench.courseExists(courseID))
+            {
+                if(test_bench.print_actions)
+                    cout << "INSERT_COURSE - canceled" << endl;
                 break;    
+            }
             //otherwise, insert that course to the system:
             test_bench.insertCourse(courseID);
             break;
@@ -326,7 +329,11 @@ string autoTest()
         case INSERT_LECTURE:
             //get a random course from those in the system:
             if(test_bench.systemEmpty())
+            {
+                if(test_bench.print_actions)
+                    cout << "INSERT_LECTURE - canceled" << endl;
                 break;
+            }
             courseID = test_bench.randCourseInSystem();
             //add a class to it:
             test_bench.insertClass(courseID);
@@ -335,7 +342,11 @@ string autoTest()
         case REMOVE:
             //get a random courseID from those that exist in the system:
             if(test_bench.systemEmpty())
+            {
+                if(test_bench.print_actions)
+                    cout << "REMOVE - canceled" << endl;
                 break;
+            }
             courseID = test_bench.randCourseInSystem();
             //remove it from the system:
             if(test_bench.courseExists(courseID))
@@ -345,9 +356,19 @@ string autoTest()
         case WATCH:
             //get a random course from those in the system:
             if(test_bench.systemEmpty())
+            {
+                if(test_bench.print_actions)
+                    cout << "WATCH - canceled" << endl;
                 break;
+            }
             courseID = test_bench.randCourseInSystem();
             //get a random class from those within that course:
+            if(test_bench.lectsCount(courseID) == 0)
+            {
+                if(test_bench.print_actions)
+                    cout << "WATCH - canceled" << endl;
+                break;
+            }
             lectureID = test_bench.randLectOfCourse(courseID);
             //get a random watch-time in the allowed range:
             watchTime = rand()%MAX_TIME_VIEWD;
@@ -358,11 +379,19 @@ string autoTest()
         case TIME_VIEWD:
             //get a random course ID from the courses in the system:
             if(test_bench.systemEmpty())
+            {
+                if(test_bench.print_actions)
+                    cout << "TIME_VIEWD - canceled" << endl;
                 break;
+            }
             courseID = test_bench.randCourseInSystem();
             //get a legal lecture ID from those in that course (end if that course has no lectures):
             if(test_bench.lectsCount(courseID) == 0)
+            {
+                if(test_bench.print_actions)
+                    cout << "TIME_VIEWD - canceled" << endl;
                 break;
+            }
             lectureID = test_bench.randLectOfCourse(courseID);
             //run time viewed test:
             ASSERT(test_bench.TimeViewed(courseID, lectureID));
@@ -370,6 +399,13 @@ string autoTest()
 
         case ITH_VIEWD:
             //get a random index that is smaller than the number of lectures:
+            assert(test_bench.numLectsInSystem() >= 0);
+            if(test_bench.numLectsInSystem() == 0)
+            {
+                if(test_bench.print_actions)
+                    cout << "ITH_VIEWD - canceled" << endl;
+                break;
+            }
             index = rand()%test_bench.numLectsInSystem();
             //check for the correct result from getIthWatchedTest:
             ASSERT(test_bench.getIthWatchedClass(index));
@@ -377,45 +413,6 @@ string autoTest()
         }
     }
     return "SUCCESS";
-    //old:    
-    //     if(action_type==MOST_VIEWD)
-    //     {
-    //         ASSERT(test_bench.getMostViewedClasses());
-    //         continue;
-    //     }
-        
-    //     if(courses_tracker.size()==0)
-    //     {
-    //         if(print_details)
-    //             cout << "ittiration cut due to empty course_tracker" << endl;
-    //         continue;
-    //     }
-    //     int course_index = rand()%courses_tracker.size();
-    //     auto it = courses_tracker.begin();
-    //     std::advance(it, course_index);
-    //     int courseID = it->first;
-        
-    //     if(action_type==REMOVE)
-    //     {
-    //         test_bench.remove(courseID);
-    //         courses_tracker.erase(courseID);
-    //         continue;
-    //     }
-
-    //     int classID = rand()%(it->second);
-    //     if(action_type==TIME_VIEWD)
-    //     {
-    //         ASSERT(test_bench.TimeViewed(courseID, classID));
-    //         continue;
-    //     }
-
-    //     if(action_type==WATCH)
-    //     {
-    //         int time_viewd = (rand()%MAX_TIME_VIEWD)+1;//make sure time is not 0 ?
-    //         test_bench.watch(courseID, classID, time_viewd);
-    //         continue;
-    //     }
-    // }
 }
 
 ActionType getRandomAction(const vector<double>& actionProvobilities)
@@ -455,20 +452,11 @@ string mixCat(queue<string>& left, queue<string>& right,
     const string& in_pair_spacer, const string& ext_spacer)
 {
     string result = "";
-    
-    // auto left_it = left.begin();
-    // auto right_it = right.begin();
-    // while(left_it != left.end() && right_it != right.end())
-    // {
-    //     result += *(left_it++) + in_pair_spacer + *(right_it++) + ext_spacer; 
-    // }
-
     while(!left.empty() && right.empty())
     {
         result += left.front() + in_pair_spacer + right.front() + ext_spacer;
         left.pop();
         right.pop(); 
     }
-
     return result.substr(0, result.size()-ext_spacer.size());
 }

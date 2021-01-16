@@ -22,12 +22,16 @@ StatusType CoursesManager2::RemoveCourse(int courseID)
         if(course_hub == nullptr)//this means that this course cannot be found in our DS
             return FAILURE;
 
-        Array<TreeNode>& lectures_array = *(course_hub->data);
-        TreeNode current_lecture = nullptr;
-        for(int i = 0; i < lectures_array.getUsedSize(); ++i)
+        if(course_hub->data != nullptr)//this makes sure that our course actualy has any lectures within it.
         {
-            current_lecture = lectures_array[i];
-            current_lecture->removeFromTree();
+            Array<TreeNode>& lectures_array = *(course_hub->data);
+            TreeNode current_lecture = nullptr;
+            for(int i = 0; i < lectures_array.getUsedSize(); ++i)
+            {
+                current_lecture = lectures_array[i];
+                if(current_lecture != nullptr)
+                    current_lecture->removeFromTree();
+            }
         }
         table.deleteKey(courseID);
     }

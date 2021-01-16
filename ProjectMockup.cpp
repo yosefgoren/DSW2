@@ -19,7 +19,8 @@ StatusType MCM::AddCourse(int courseID)
 StatusType MCM::AddClass(int courseID, int* classID)
 {
     *classID = courses_list[courseID];
-    lect_list.insert(MLecture(courseID++, *classID, 0));
+    lect_list.insert(MLecture(courseID, *classID, 0));
+    ++courses_list[courseID];
     return SUCCESS;
 }
 

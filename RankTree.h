@@ -99,6 +99,8 @@ private:
 template <class Data, class Key>
 typename SearchTree<Data, Key>::Node SearchTree<Data, Key>::findByOrder(int place)
 {
+    if(head == nullptr)
+        return nullptr;
     if(head->sub_tree_size < place)
         return nullptr;
     int skipped_counter = 0;

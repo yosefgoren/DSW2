@@ -111,7 +111,6 @@ public:
      * @brief the user is responsible to update the number of elements in the structure himself after using this fucntion
      */
     Data& operator[](unsigned int i){
-        assert(!is_stack_array);
         assert(i < size);
         return data[i];
     }
@@ -120,7 +119,6 @@ public:
      * @brief the user is responsible to update the number of elements in the structure himself after using this fucntion
      */
     const Data& operator[](unsigned int i) const{
-        assert(!is_stack_array);
         assert(i < size);
         return data[i];
     }
