@@ -19,7 +19,6 @@ typedef SearchTree<void*,Lecture>::Node Tnode;
 
 class HashTable{
     // function<int(int,int)> func;
-    Array<DLinkedList<Array<Tnode>*>*> table;
     int num_of_keys;
     int table_size;
     //make sure INITIAL_SIZE in Array is the same
@@ -32,6 +31,7 @@ class HashTable{
     bool checkExpand() const;
     bool checkShrink() const;
 public:
+    Array<DLinkedList<Array<Tnode>*>*> table;
     HashTable();
     HashTable(int size);
     ~HashTable();
