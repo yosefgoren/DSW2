@@ -45,18 +45,11 @@ void test2()
     arr.increment()[3] = "endl everywhere :) << endl;";
     assert(arr.getUsedSize() == 3);
 
-    // for(auto element : arr)
-    //     cout << element << endl;
-
-
     Array<string> new_arr(20, "NEW DEFAULT!!", false);
 
     for(int i = 0; i < 10; ++i)
         if(arr.is_initialized(i))
             new_arr.increment()[i] = arr[i];
-    
-    // for(auto item : new_arr)
-    //     cout << item << endl;
     
     Array<string> even_newer = new_arr;
     cout << "this is what oriel is looking for" << endl;

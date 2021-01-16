@@ -31,9 +31,9 @@ enum ActionType
     ITH_VIEWD,
 };
 
-string cat(queue<string>& vec, const string& spacer = ", ");
+string cat(queue<string>& vec, const string& spacer = " , ");
 string mixCat(queue<string>& left, queue<string>& right,
-    const string& in_pair_spacer = " | ", const string& ext_spacer = ", ");
+    const string& in_pair_spacer = "|", const string& ext_spacer = " , ");
 ActionType getRandomAction(const vector<double>& actionProvobilities);
 string manualTest();
 string autoTest();
@@ -176,8 +176,8 @@ public:
         else
         {
             lastAction += "lecture rating/index = "+to_string(class_index)
-                +". mockup: course = "+to_string(mockupCourse)+", class = "+to_string(mockupClass)
-                +" |  proper: course = "+to_string(properCourse)+", class = "+to_string(properClass);
+                +". mockup: "+to_string(mockupCourse)+"|"+to_string(mockupClass)
+                +" ,  proper: "+to_string(properCourse)+"|"+to_string(properClass);
             if(print_actions)
             cout << lastAction << endl;
             return mockupCourse==properCourse && mockupClass==properClass;
@@ -187,26 +187,49 @@ public:
     bool fullTest(bool paired_format = true)
     {
         queue<string> MCR, MLR, PCR, PLR;
+        properManager.printTree();
+        cout << "number of non-zero lectures in mockup: " << mockupManager.nonZeroLectureCount() << endl;
 
         int tmp_class = -1;//just a default value to detect unexpected behavior
         int tmp_course = -1;
-        for(int i = 0; i < numLectsInSystem(); ++i)
+        bool result = true;
+        for(int i = 1; i <= numLectsInSystem(); ++i)
         {
-            mockupManager.GetIthWatchedClass(i, &tmp_course, &tmp_class);
-            MCR.push(to_string(tmp_course));
-            MLR.push(to_string(tmp_class));
+            if(i == 32)
+            {
+                std::cout << std::endl;
+            }
+            StatusType mockup_result_status = mockupManager.GetIthWatchedClass(i, &tmp_course, &tmp_class);
+            if(mockup_result_status != FAILURE)
+            {
+                MCR.push(to_string(tmp_course));
+                MLR.push(to_string(tmp_class));
+            }
 
-            properManager.GetIthWatchedClass(i, &tmp_course, &tmp_class);
-            PCR.push(to_string(tmp_course));
-            PLR.push(to_string(tmp_class));
+            StatusType proper_result_status = properManager.GetIthWatchedClass(i, &tmp_course, &tmp_class);
+            if(proper_result_status != FAILURE)
+            {
+                PCR.push(to_string(tmp_course));
+                PLR.push(to_string(tmp_class));
+            }
+            if(mockup_result_status != proper_result_status)
+            {
+                lastAction = "FullTest(CMT): mockup and proper retuned different StatusType results.";
+                if(print_actions)
+                    cout << lastAction << endl;
+                return false;
+            }
+            if(mockup_result_status != FAILURE)
+                if(MCR.front() != PCR.front() || MLR.front() != PLR.front())
+                    result = false;
         }
         lastAction = "FullTest(CMT):\nproper: "
-        + (paired_format ? mixCat(PCR, PLR) : cat(PCR) + " | " + cat(PLR)) 
-        + "\nmockup: " + (paired_format ? mixCat(MCR, MLR) : cat(MCR) + " | " + cat(MLR));
+        + (paired_format ? mixCat(PCR, PLR) : cat(PCR) + " ::: " + cat(PLR)) 
+        + "\nmockup: " + (paired_format ? mixCat(MCR, MLR) : cat(MCR) + " ::: " + cat(MLR));
 
         if(print_actions)
             cout << lastAction << endl;
-        return MCR == PCR && MLR == PLR;
+        return result;
     }
 };
 
@@ -270,17 +293,17 @@ const vector<double> provobilities()
     // WATCH
     // TIME_VIEWD
     // ITH_VIEWD
-    return vector<double>({0.25, 0.2, 0, 0.35, 0.1, 0.1});
+    return vector<double>({0.09, 0.5, 0.01, 0.3, 0.05, 0.05});
 }
-    
+
 string autoTest()
 {
     cout << "starting autoTest..." << endl;
     //settings:
-    const int NUM_TEST_ITTIRATIONS = 100;
-    const int MAX_COURSE_ID = 80;
-    const int MAX_CLASSES_IN_COURSE = 5;
-    const int MAX_TIME_VIEWD = 10;
+    const int NUM_TEST_ITTIRATIONS = 5000;
+    const int MAX_COURSE_ID = 500;
+    const int MAX_CLASSES_IN_COURSE = 500;
+    const int MAX_TIME_VIEWD = 100;
     const bool print_details = true;
     const bool print_full_always = true;
 
@@ -291,11 +314,16 @@ string autoTest()
         test_bench.disablePrinting();
     
     //actual test:
-    srand(1);
+    srand(3);
     for(int j = 0; j < NUM_TEST_ITTIRATIONS; ++j)
     {
         if(print_full_always)
             ASSERT(test_bench.fullTest());
+
+        if(j == 220)
+        {
+            cout << "stop here!" << endl;
+        }
 
         cout << endl;
         if(print_details)
@@ -371,7 +399,7 @@ string autoTest()
             }
             lectureID = test_bench.randLectOfCourse(courseID);
             //get a random watch-time in the allowed range:
-            watchTime = rand()%MAX_TIME_VIEWD;
+            watchTime = (rand()%MAX_TIME_VIEWD)+1;
             //update the system with those ID's and watch time:
             test_bench.watch(courseID, lectureID, watchTime);
             break;
@@ -452,7 +480,7 @@ string mixCat(queue<string>& left, queue<string>& right,
     const string& in_pair_spacer, const string& ext_spacer)
 {
     string result = "";
-    while(!left.empty() && right.empty())
+    while(!left.empty() && !right.empty())
     {
         result += left.front() + in_pair_spacer + right.front() + ext_spacer;
         left.pop();

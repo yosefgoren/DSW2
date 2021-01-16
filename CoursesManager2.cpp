@@ -69,11 +69,20 @@ StatusType CoursesManager2::WatchClass(int courseID, int classID, int time)
         if(lectures_array.getUsedSize() < classID + 1)
             return INVALID_INPUT;
 
-        TreeNode current_lecture = lectures_array[classID];
-        if(current_lecture == nullptr)
+        TreeNode& current_lecture_node = lectures_array[classID];
+        if(current_lecture_node == nullptr)
+        {
             tree.insert(Lecture(courseID, classID, time), nullptr);
+            current_lecture_node = tree.findNode(Lecture(courseID, classID, time));
+        }
         else
-            current_lecture->key.time += time;
+        {
+            Lecture lecture_key = current_lecture_node->key;
+            lecture_key.time += time;
+            current_lecture_node->removeFromTree();
+            tree.insert(lecture_key, nullptr);
+            current_lecture_node = tree.findNode(lecture_key);
+        }
     }
     catch(...){return ALLOCATION_ERROR;}
     return SUCCESS;
@@ -100,8 +109,8 @@ StatusType CoursesManager2::TimeViewed(int courseID, int classID, int *timeViewe
 StatusType CoursesManager2::GetIthWatchedClass(int i, int* courseID, int* classID)
 {
     try
-    {
-        TreeNode lecture_node = tree.findByOrder(i);
+    {    
+        TreeNode lecture_node = tree.findByOrder(i-1);
         if(lecture_node == nullptr)
             return FAILURE;
         *courseID = lecture_node->key.courseID;
@@ -109,4 +118,27 @@ StatusType CoursesManager2::GetIthWatchedClass(int i, int* courseID, int* classI
     }
     catch(...){return ALLOCATION_ERROR;}
     return SUCCESS;
+}
+
+void CoursesManager2::printTree(bool full_print)
+{
+    if(tree.head == nullptr)
+    {
+        std::cout << "tree empty!" << std::endl;
+        return;
+    }
+    std::cout << "tree size: " << tree.head->sub_tree_size << std::endl;
+    int counter = 0;
+    for(auto item : tree)
+    {
+        counter++;
+        if(full_print)
+        {
+            Lecture lect = item->key;
+            std::cout << "time: " << lect.time << ", course: "
+                << lect.courseID << ", lecture: " << lect.classID << std::endl;
+        }
+    }
+    std::cout << "counted size: " << counter << std::endl;
+    assert(tree.head->sub_tree_size == counter);
 }
