@@ -146,8 +146,8 @@ void SearchTree<Data, Key>::removeSub(Node top)
     Node father = top->father;
     delete top;
     
-    if(father != nullptr)
-        father->updateData();
+    // if(father != nullptr)
+    //     father->updateData();
 }
 
 template <class Data, class Key>

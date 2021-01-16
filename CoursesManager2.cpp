@@ -97,6 +97,9 @@ StatusType CoursesManager2::TimeViewed(int courseID, int classID, int *timeViewe
             return FAILURE;
 
         Array<TreeNode>& lectures_array = *(course_hub->data);
+        if(lectures_array.getUsedSize() <= classID)
+            return INVALID_INPUT;
+
         TreeNode current_lecture = lectures_array[classID];
         if(lectures_array.getUsedSize() < classID + 1)
             return INVALID_INPUT;
