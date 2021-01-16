@@ -26,11 +26,12 @@ public:
     };
     HashTable hash_table;
     std::set<int> courses_set;
-    TesterHT() : frequences({0.2,0.2,0.2,0.2,0.2}){}
+    TesterHT() : frequences({0.6,0.1,0.1,0.1,0.1}){}
     void printElements() const;
     const std::vector<double> frequences;
     ActionType pickAction() const;
     bool test();
+    void printDistribution() const;
 };
 
 #endif
