@@ -30,6 +30,15 @@ void TesterHT::printElements() const{
     }
 }
 
+void TesterHT::printDistribution() const{
+    cout<<"Distribution: ";
+    for(int i = 0; i < hash_table.getTableSize(); i++){
+        if(hash_table.table.is_initialized(i)){
+            cout<<hash_table.table[i]->getSize()<<" ";
+        }
+    }
+}
+
 TesterHT::ActionType TesterHT::pickAction() const{
     // srand(time(NULL));
     double command_type_seed = (double)(rand()%100)/100;
@@ -107,6 +116,7 @@ bool TesterHT::test(){
             break;
         } 
     }
+    printDistribution();
         return true;
 }   
 
