@@ -65,15 +65,32 @@ StatusType MCM::TimeViewed(int courseID, int classID, int *timeViewed)
 
 StatusType MCM::GetIthWatchedClass(int i, int *courseID, int *classID)
 {
-    int counter = 0;
-    for(auto lect : lect_list)
+    int counter = 1;
+    for(auto it = lect_list.begin(); it != lect_list.end(); ++it)
     {
-        if(counter++ >= i)
-            if(lect.time == 0)
+        if(counter == i)
+        {
+            if(it->time == 0)
                 return FAILURE;
-            *courseID = lect.courseID;
-            *classID = lect.classID;
-            break;
+            *courseID = it->courseID;
+            *classID = it->classID;
+            return SUCCESS;
+        }
+        counter++;
     }
-    return SUCCESS;
+    
+
+    return FAILURE;
+
+}
+
+int MCM::nonZeroLectureCount()
+{
+    int counter = 0;
+    for(auto item : lect_list)
+    {
+        if(item.time != 0)
+            ++counter;
+    }
+    return counter;
 }

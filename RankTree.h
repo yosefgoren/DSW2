@@ -85,12 +85,12 @@ struct SearchTree<Data, Key>::node_t
     friend SearchTree<Data, Key>;
     void removeFromTree(){tree.remove(key);}
     bool lastInTree(){return father==nullptr && left==nullptr && right==nullptr;}
+    int sub_tree_size;
 private:
     node_t* father;
     node_t* left;
     node_t* right;
     int height;
-    int sub_tree_size;
     void updateData();
     node_t(Key key, const Data& data, SearchTree<Data, Key>& tree)
         :key(key), data(data), tree(tree), father(nullptr), left(nullptr), right(nullptr), height(1), sub_tree_size(1){}
@@ -146,8 +146,8 @@ void SearchTree<Data, Key>::removeSub(Node top)
     Node father = top->father;
     delete top;
     
-    if(father != nullptr)
-        father->updateData();
+    // if(father != nullptr)
+    //     father->updateData();
 }
 
 template <class Data, class Key>
@@ -658,10 +658,14 @@ bool SearchTree<Data, Key>::insert(Key key, const Data& data)
     }
     new_node->father = current;
 
+
     //now fix the AVL condition: (the condition is: abs(BalanceFactor)) < 2)
     current = new_node;
+    bool exit = false;
     while(current != head)
     {
+        if(exit)
+            break;
         Node next = current->father;
         switch (BalanceFactor(next))
         {
@@ -669,12 +673,14 @@ bool SearchTree<Data, Key>::insert(Key key, const Data& data)
             if(BalanceFactor(next->left) == -1)
                 rollLR(next->left->right, next->left, next);
             else rollLL(next->left, next);
-            return true;
+            exit = true;
+            break;
         case -2:
             if(BalanceFactor(next->right) == 1)
                 rollRL(next->right->left, next->right, next);
             else rollRR(next->right, next);
-            return true;
+            exit = true;
+            break;
         default:
             next->updateData();
             current = next;
@@ -688,6 +694,18 @@ bool SearchTree<Data, Key>::insert(Key key, const Data& data)
     }
     return true;
 }
+
+// template <class Data, class Key>
+// static void SearchTree<Data, Key>::treePrint(Node current)
+// {
+//     if(current == nullptr)
+//         return;
+//     if(current->left != nullptr)
+//         treePrint(current->left);
+//     if(current->right != nullptr)
+//         treePrint(current->right);
+//     std::cout << current->key << std::endl;
+// }
 
 template <class Data, class Key>
 typename SearchTree<Data, Key>::Node SearchTree<Data, Key>::closestBiggerSon(Node current)

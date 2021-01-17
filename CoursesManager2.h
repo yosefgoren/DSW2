@@ -23,6 +23,7 @@ public:
     StatusType WatchClass(int courseID, int classID, int time);
     StatusType TimeViewed(int courseID, int classID, int *timeViewed);
     StatusType GetIthWatchedClass(int i, int* courseID, int* classID);
+    void printTree(bool full_print = false);
 };
 
 

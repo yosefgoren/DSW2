@@ -43,6 +43,7 @@ public:
     MCM& operator=(const MCM&) = delete;
 
     int lecturesInCourse(int courseID);
+    int nonZeroLectureCount();
     StatusType AddCourse(int courseID);
     StatusType RemoveCourse(int courseID, int& num_removed);
     StatusType AddClass(int courseID, int* classID);
